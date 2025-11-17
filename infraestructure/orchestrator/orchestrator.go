@@ -13,12 +13,15 @@ package orchestrator
 import (
 	"sync"
 
+	fanworkersink_repository "github.com/sebasgal/fan-worker-sink-go/domain/model/fan-worker-sink"
 	workerlog "github.com/sebasgal/fan-worker-sink-go/domain/model/workerlog"
 	workermetric "github.com/sebasgal/fan-worker-sink-go/domain/model/workermetric"
 	usecase "github.com/sebasgal/fan-worker-sink-go/domain/usecase"
-	fan_worker_sink "github.com/sebasgal/fan-worker-sink-go/domain/usecase/fan-worker-sink"
+	fan_worker_sink_usecase "github.com/sebasgal/fan-worker-sink-go/domain/usecase/fan-worker-sink"
+	fanworkersink_adapter "github.com/sebasgal/fan-worker-sink-go/infraestructure/adapters/fan-worker-sink"
 	workerlog_adapter "github.com/sebasgal/fan-worker-sink-go/infraestructure/adapters/workerlog_adapter"
 	workermetric_adapter "github.com/sebasgal/fan-worker-sink-go/infraestructure/adapters/workermetric_adapter"
+
 	utils "github.com/sebasgal/fan-worker-sink-go/infraestructure/helpers/utils"
 )
 
@@ -31,7 +34,12 @@ import (
 // Devuelve como resultado una lista de enteros, que contiene el cuadrado de cada número procesado.
 func Start(howManynumber int, howManyWorkers int) []int {
 	numberList := utils.GenerateRandomList(howManynumber)
-	return Execute(numberList, howManyWorkers)
+
+	fan := fanworkersink_adapter.FanAdapter{}
+	worker := fanworkersink_adapter.WorkerAdapter{}
+	sink := fanworkersink_adapter.SinkAdapter{}
+
+	return Execute(numberList, howManyWorkers, fan, sink, worker)
 
 }
 
@@ -40,7 +48,7 @@ func Start(howManynumber int, howManyWorkers int) []int {
 //
 //	'numbers' de tipo lista de entero que representa la lista con los números aleatorios generados
 //	'workerCount' de tipo entero que representa la cantidad de workers en los cuales se repartirá la carga de trabajo
-func Execute(numbers []int, workerCount int) []int {
+func Execute(numbers []int, workerCount int, fan fanworkersink_repository.IFan, sink fanworkersink_repository.ISink, worker fanworkersink_repository.IWorker) []int {
 
 	//Generamos 4 canales. dos sin buffer (fanChan y workerChan) y dos con buffer (metricsChan y logsChan)
 	//	fanChan: Será el canal utilizado por FAN  para inyectar los datos que se deben procesar.
@@ -53,7 +61,7 @@ func Execute(numbers []int, workerCount int) []int {
 	logsChan := make(chan workerlog.WorkerLog, len(numbers))
 
 	//Se ejecuta una Go Routine para generar una ejecución en paralelo con un nuevo hilo con respecto al hilo principal del programa, y que ejecute la funcion del FAN para inyectar en el canal cada dato que se debe procesar
-	go fan_worker_sink.FanOut(numbers, fanChan)
+	go fan_worker_sink_usecase.StartFan(fan, numbers, fanChan)
 
 	//Utilizamos sync.WaitGroup para indicar cuantas Go Routines se deben esperar antes de continuar con el flujo de ejecución en el momento que definamos. Esperaremos la misma cantidad de Go Routines como Workers se hayan solicitado
 	var wg sync.WaitGroup
@@ -63,7 +71,7 @@ func Execute(numbers []int, workerCount int) []int {
 	for i := 1; i <= workerCount; i++ {
 		workerID := i
 		go func() {
-			fan_worker_sink.Worker(workerID, fanChan, workerChan, metricsChan, logsChan)
+			fan_worker_sink_usecase.StartWorker(worker, workerID, fanChan, workerChan, metricsChan, logsChan)
 			wg.Done()
 		}()
 	}
@@ -77,7 +85,7 @@ func Execute(numbers []int, workerCount int) []int {
 	}()
 
 	//Se ejecuta la funcionalidad del SINK para agrupar y ordenar el resultado de los datos calculados
-	results := fan_worker_sink.Sink(workerChan)
+	results := fan_worker_sink_usecase.StartSink(sink, workerChan)
 
 	//Generamos las instancias que tienen la implementación necesario de los metodos de las interfaces que queremos ejecutar (Guardar en CSV y Escribir logs en Consola)
 	workerLogger := workerlog_adapter.WorkerLogAdapter{}
