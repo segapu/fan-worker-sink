@@ -1,13 +1,19 @@
-// Indicamos que hace parte del paquete fan_worker_sink, y este archivo será de las veces de WORKER en el patron. Encargado de procesar los datos con la lógica solicitada (El cuadrado del número recibido)
+// Indicamos que hace parte del paquete fan_worker_sink_usecase, y y será la clase que interactuará y dependerá de las interfaces para hacer de las veces de WORKER
 package fan_worker_sink_usecase
 
+//Importaciones:
+// 	fanworkersink_repository: Se importa para poder interactuar con la interface
+// 	workerlog: Se importa para el tipo de datos que será el canal al cual le enviará mensajes de la traza de logs
+//	workermetric: Se importa para el tipo de datos que será el canal al cual le enviará mensajes de las metricas de la cantidad de datos procesados por cada worker
 import (
 	fanworkersink_repository "github.com/sebasgal/fan-worker-sink-go/domain/model/fan-worker-sink"
-	"github.com/sebasgal/fan-worker-sink-go/domain/model/workerlog"
-	"github.com/sebasgal/fan-worker-sink-go/domain/model/workermetric"
+	workerlog "github.com/sebasgal/fan-worker-sink-go/domain/model/workerlog"
+	workermetric "github.com/sebasgal/fan-worker-sink-go/domain/model/workermetric"
 )
 
-// Recibe 5 parametros
+// Hace el llamado al metodo de la interface y recibe el ID que identifica cada Worker, el canal del cual leerá los números a procesar,
+// tambien recibe el canal al cual inyectará los resultados del cuadrado del número calculado, además de los 2 canales de logs, uno de metricas y el otro para
+// los logs de lo que procesa exactamente cada worker. Define qué hara, más la implementación del cómo hacerlo está en los adapters
 func StartWorker(iworker fanworkersink_repository.IWorker, workerID int,
 	fanChan <-chan int,
 	workerChan chan<- int,
@@ -16,35 +22,3 @@ func StartWorker(iworker fanworkersink_repository.IWorker, workerID int,
 
 	iworker.Worker(workerID, fanChan, workerChan, metricChan, logChan)
 }
-
-//
-//	id: el ID del Worker que está procesando
-//	chan in: El canal del cual unicamente leerá  la información que debe procesar
-//	chan out: El canal al cual unicamente inyectará el resultado calculado
-//	chan metrics: El canal al cual inyectará cuantos datos proceso el Worker
-//	chan logs: El canal al cual irá inyectarlo toda la traza que ejecuta el Worker (Qué dato recibio, Quien lo proceso y Qué resultado obtuvo)
-// func Worker(id int, in <-chan int, out chan<- int, metrics chan<- workermetric.WorkerMetric, logs chan<- workerlog.WorkerLog) {
-
-// 	//El contador de datos que ha procesado el Worker
-// 	count := 0
-
-// 	//Toma los datos del canal de entrada 'chan in', calcula el cuadrado del número recibido, lo devuelve en el canal de salida 'chan out' y aumenta el contador de datos procesados
-// 	for n := range in {
-// 		squared := n * n
-// 		out <- squared
-// 		count++
-
-// 		// Registra a detalle la actividad generada por cada Worker y lo inyecta en el canal de logs (Qué dato recibio, Quien lo proceso y Qué resultado obtuvo)
-// 		logs <- workerlog.WorkerLog{
-// 			WorkerID: id,
-// 			Input:    n,
-// 			Output:   squared,
-// 		}
-// 	}
-
-// 	// Registra a detalle la actividad generada por cada Worker y lo inyecta en el canal de metrics (Cuantos datos proceso el Worker)
-// 	metrics <- workermetric.WorkerMetric{
-// 		WorkerID: id,
-// 		Count:    count,
-// 	}
-// }

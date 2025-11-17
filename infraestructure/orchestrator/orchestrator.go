@@ -38,11 +38,13 @@ import (
 func Start(howManynumber int, howManyWorkers int) []int {
 	numberList := utils.GenerateRandomList(howManynumber)
 
+	//Generamos las implementaciones que serán pasadas como parametro para el metodo de orquestación al llamar Execute
 	fan := fanworkersink_adapter.FanAdapter{}
 	worker := fanworkersink_adapter.WorkerAdapter{}
 	sink := fanworkersink_adapter.SinkAdapter{}
 	workerLogger := workerlog_adapter.WorkerLogAdapter{}
 	workerMetric := workermetric_adapter.WorkerMetricAdapter{}
+
 	return Execute(numberList, howManyWorkers, fan, sink, worker, workerLogger, workerMetric)
 
 }

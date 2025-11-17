@@ -9,6 +9,7 @@ type SinkAdapter struct{}
 //	chan in: Será el canal del cual leerá el resultado generado por los Workers,
 //
 // Devuelve una lista de enteros. Está lista será el resultado de la agrupación de todos los datos ordenados de forma ascendente
+//Además de que es de tipo SinkAdapter
 func (SinkAdapter) Sink(in <-chan int) []int {
 	//genera una lista de números que irá incrementando cada que procesa alguno.
 	results := make([]int, 0)
