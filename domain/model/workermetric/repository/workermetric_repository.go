@@ -3,6 +3,6 @@ package workermetricRepository
 
 import workermetric "github.com/sebasgal/fan-worker-sink-go/domain/model/workermetric"
 
-type WorkerMetricRepositoryLogger interface {
+type IWorkerMetrics interface {
 	EscribirLog(message <-chan workermetric.WorkerMetric)
 }

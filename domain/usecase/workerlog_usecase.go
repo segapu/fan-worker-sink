@@ -9,7 +9,7 @@ import (
 	workerlogRepository "github.com/sebasgal/fan-worker-sink-go/domain/model/workerlog/repository"
 )
 
-//Hace el llamado al metodo de la interface y recibe el canal donde están los mensajes que escribirá en CSV como Log y define qué hara, más la implementación del cómo hacerlo está en los adapters
-func SaveLogsCSV(saveCSV workerlogRepository.WorkerLogRepositorySave, logs <-chan workerlog.WorkerLog) {
+// Hace el llamado al metodo de la interface y recibe el canal donde están los mensajes que escribirá en CSV como Log y define qué hara, más la implementación del cómo hacerlo está en los adapters
+func SaveLogsCSV(saveCSV workerlogRepository.IWorkerLog, logs <-chan workerlog.WorkerLog) {
 	saveCSV.GuardarLog(logs)
 }

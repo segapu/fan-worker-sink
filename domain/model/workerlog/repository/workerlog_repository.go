@@ -3,6 +3,6 @@ package workerlogRepository
 
 import "github.com/sebasgal/fan-worker-sink-go/domain/model/workerlog"
 
-type WorkerLogRepositorySave interface {
+type IWorkerLog interface {
 	GuardarLog(logs <-chan workerlog.WorkerLog)
 }
