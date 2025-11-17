@@ -3,10 +3,14 @@ package orchestrator
 
 //Importaciones:
 //		sync: Lo utilizamos para esperar a que todas las Go Routines indicadas finalicen por completo antes de continuar con la ejecución en el hilo principal
+//		fanworkersink_repository Importamos el paquete para hacer uso de las interfaces definidas para fan-worker-sink
 //		workerlog: Importamos el paquete para hacer uso de la estructura definida para mapear los logs de cada Worker (Qué Worker recibio la petición, Qué número recibió y qué resultado arrojó)
+//		workerlog_repository: Importamos el parquete para hacer uso de las interfaces definidas para el workerlog
 // 		workermetric: Importamos el paquete para hacer uso de la estructura definida para mapear los logs de metricas de cada Worker (Cuantos datos proceso cada Worker)
 //		usecase: Importamos el paquete para hacer uso de las funcionalidades UseCase definidas para los logs de los Worker (Imprimir en consola y guardar en CSV)
-// 		fan_worker_sink: Importamos el paquete donde se encuentra definido los archivos FAN - WORKER - SINK y poder entregarle a cada uno la información que necesita para cumplir el patron
+//		fan_worker_sink_usecase: Importamos el paquete para hacer uso de las funcionalidades UseCase definidas para los FAN-WORKER-SINK
+//		fanworkersink_adapter: Importamos el paquete para poder inyectar la implementación correcta que necesita el UseCase para ejecutar los metodos del patron FAN-WORKER-SINK
+//		result_adapter: Importamos el paquete para poder inyecttar la implementación correcta que necesita el UseCase para ejecutar el metodo de almacenar el resultado
 //		workerlog_adapter: Importamos el paquete para poder inyecar la implementación correcta que necesita el UseCase para ejecutar el metodo (Para guardar en CSV dada la implementación del metodo)
 //		workermetric_adapter: Importamos el paquete para poder inyectar la implementación correcta que necesita el UseCase para ejecuutar el metodo (Para escribir en consola el resumen de metricas dada la implementación del metodo)
 //		utils: Importamos el paquete para poder hacer reuso de una funcionalidad generica y reutilizable (Generar los números aletorios solicitados)
@@ -14,14 +18,17 @@ import (
 	"sync"
 
 	fanworkersink_repository "github.com/sebasgal/fan-worker-sink-go/domain/model/fan-worker-sink"
+	result_repository "github.com/sebasgal/fan-worker-sink-go/domain/model/result"
 	workerlog "github.com/sebasgal/fan-worker-sink-go/domain/model/workerlog"
 	workerlog_repository "github.com/sebasgal/fan-worker-sink-go/domain/model/workerlog/repository"
+
 	workermetrics_repository "github.com/sebasgal/fan-worker-sink-go/domain/model/workermetric/repository"
 
 	workermetric "github.com/sebasgal/fan-worker-sink-go/domain/model/workermetric"
 	usecase "github.com/sebasgal/fan-worker-sink-go/domain/usecase"
 	fan_worker_sink_usecase "github.com/sebasgal/fan-worker-sink-go/domain/usecase/fan-worker-sink"
 	fanworkersink_adapter "github.com/sebasgal/fan-worker-sink-go/infraestructure/adapters/fan-worker-sink"
+	result_adapter "github.com/sebasgal/fan-worker-sink-go/infraestructure/adapters/result_adapter"
 	workerlog_adapter "github.com/sebasgal/fan-worker-sink-go/infraestructure/adapters/workerlog_adapter"
 	workermetric_adapter "github.com/sebasgal/fan-worker-sink-go/infraestructure/adapters/workermetric_adapter"
 
@@ -33,19 +40,20 @@ import (
 //
 //	'howManyNumber' de tipo entero que representa la cantidad de números que debemos procesar y que se generarán de manera aleatoria
 //	'howManyWorkers' de tipo entero que representa la cantidad de workers en los cuales se repartirá la carga de trabajo
-//
-// Devuelve como resultado una lista de enteros, que contiene el cuadrado de cada número procesado.
-func Start(howManynumber int, howManyWorkers int) []int {
+func Start(howManynumber int, howManyWorkers int) {
 	numberList := utils.GenerateRandomList(howManynumber)
 
-	//Generamos las implementaciones que serán pasadas como parametro para el metodo de orquestación al llamar Execute
+	//Generamos las implementaciones que serán pasadas como parametro para el metodo de orquestación al llamar Execute y el LogResult final para almacenar el resultado
 	fan := fanworkersink_adapter.FanAdapter{}
 	worker := fanworkersink_adapter.WorkerAdapter{}
 	sink := fanworkersink_adapter.SinkAdapter{}
 	workerLogger := workerlog_adapter.WorkerLogAdapter{}
 	workerMetric := workermetric_adapter.WorkerMetricAdapter{}
+	results := result_adapter.ResultAdapter{}
 
-	return Execute(numberList, howManyWorkers, fan, sink, worker, workerLogger, workerMetric)
+	result := Execute(numberList, howManyWorkers, fan, sink, worker, workerLogger, workerMetric)
+
+	LogResult(results, result)
 
 }
 
@@ -112,4 +120,13 @@ func Execute(
 
 	//Retornamos la lista con los resultados agrupados y ordenaos por el SINK
 	return results
+}
+
+
+//Es el llamado al metodo que permite almacenar en archivo CSV el resultado de la lista ordenada de números.
+//Recibe 2 parametros: 
+// 	results: La implementación de la interface correcta
+//	numbers: La lista ordenada de manera ascendente
+func LogResult(results result_repository.IResult, numbers []int) {
+	usecase.SaveResults(results, numbers)
 }

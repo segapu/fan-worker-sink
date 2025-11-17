@@ -41,10 +41,8 @@ func main() {
 		return
 	}
 
-	//Llamos el metodo Start que se encuentra dentro del Orchestrator para iniciar la ejecución de la lógica con los parametros recibidos o por defecto y conocer finalmente la cantidad de datos procesados.
-	result := orchestrator.Start(*numbersPtr, *workersPtr)
-	fmt.Printf("Se procesaron con éxito %d números\n", len(result))
-	fmt.Print(result)
+	//Llamos el metodo Start que se encuentra dentro del Orchestrator para iniciar la ejecución de la lógica con los parametros recibidos o por defecto
+	orchestrator.Start(*numbersPtr, *workersPtr)
 
 	//Conocemos el tiempo que pasó desde que ejecutamos el Start hasta que finalizó la ejecución completa y lo imprimimos en consola.
 	totalTime := time.Since(startTime)
