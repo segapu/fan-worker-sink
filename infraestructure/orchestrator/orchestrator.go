@@ -51,9 +51,7 @@ func Start(howManynumber int, howManyWorkers int) {
 	workerMetric := workermetric_adapter.WorkerMetricAdapter{}
 	results := result_adapter.ResultAdapter{}
 
-	result := Execute(numberList, howManyWorkers, fan, sink, worker, workerLogger, workerMetric)
-
-	LogResult(results, result)
+	Execute(numberList, howManyWorkers, fan, sink, worker, workerLogger, workerMetric, results)
 
 }
 
@@ -69,15 +67,16 @@ func Execute(
 	sink fanworkersink_repository.ISink,
 	worker fanworkersink_repository.IWorker,
 	workerlogger workerlog_repository.IWorkerLog,
-	workermetrics workermetrics_repository.IWorkerMetrics) []int {
+	workermetrics workermetrics_repository.IWorkerMetrics,
+	result result_repository.IResult) {
 
 	//Generamos 4 canales. dos sin buffer (fanChan y workerChan) y dos con buffer (metricsChan y logsChan)
 	//	fanChan: Será el canal utilizado por FAN  para inyectar los datos que se deben procesar.
 	// 	workerChan: Será el canal utilizado por los Workers para dejar el resultado calculado y será leido por SINK para agrupar dicho resultado
 	// 	metricsChan: Será el canal utilizado para que cada Worker registre cuantos datos procesó
 	// 	logsChan: Será el canal utilizado por cada Worker para registrar quien procesó qué dato y cual resultado calculó
-	fanChan := make(chan int)
-	workerChan := make(chan int)
+	fanChan := make(chan int, len(numbers))
+	workerChan := make(chan int, len(numbers))
 	metricsChan := make(chan workermetric.WorkerMetric, workerCount)
 	logsChan := make(chan workerlog.WorkerLog, len(numbers))
 
@@ -109,23 +108,23 @@ func Execute(
 	results := fan_worker_sink_usecase.StartSink(sink, workerChan)
 
 	//Generamos una nueva Go routine con el sync.WaitGroup para generar en otro hilo el archivo en CSV sin intervenir con los logs de la consola en el hilo principal
-	wg.Add(1)
+	wg.Add(2)
 	go func() {
 		usecase.SaveLogsCSV(workerlogger, logsChan)
 		wg.Done()
 	}()
+	go func() {
+		usecase.SaveResults(result, results)
+		wg.Done()
+	}()
 	usecase.WriteMetricLog(workermetrics, metricsChan)
-
 	wg.Wait()
-
-	//Retornamos la lista con los resultados agrupados y ordenaos por el SINK
-	return results
 }
 
-
-//Es el llamado al metodo que permite almacenar en archivo CSV el resultado de la lista ordenada de números.
-//Recibe 2 parametros: 
-// 	results: La implementación de la interface correcta
+// Es el llamado al metodo que permite almacenar en archivo CSV el resultado de la lista ordenada de números.
+// Recibe 2 parametros:
+//
+//	results: La implementación de la interface correcta
 //	numbers: La lista ordenada de manera ascendente
 func LogResult(results result_repository.IResult, numbers []int) {
 	usecase.SaveResults(results, numbers)
