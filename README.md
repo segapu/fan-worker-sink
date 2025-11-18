@@ -61,12 +61,24 @@ Estos parametros deben ser mayores que 0 ambos, y pueden pasarse en el comando a
 go run main.go --numbers=10000 --workers=5
 ```
 
-La ejecución de este desarrollo, nos generará un archivo .CSV llamado worker_logs.csv en la raiz de su ejecución, el cual contendrá la información que cada worker procesó (Qué worker proceso qué número y qué resultado obtuvo). Se visualizará de la siguiente manera, obteniendo la cantidad de registro que números se hayan solicitado
+La ejecución de este desarrollo, nos generará dos archivos .CSV en la raiz de su ejecución
 
-|Worker ID|Input Number|Result|
-|-|-|-|
-|1|4|16|
-|1|5|25|
-|2|6|36|
-|3|2|4|
-|1|9|81|
+* worker_logs.csv: El cual contendrá la información que cada worker procesó (Qué worker proceso qué número y qué resultado obtuvo). Se visualizará de la siguiente manera, obteniendo la cantidad de registros que números se hayan solicitado
+
+    |Worker ID|Input Number|Result|
+    |-|-|-|
+    |1|4|16|
+    |1|5|25|
+    |2|6|36|
+    |3|2|4|
+    |1|9|81|
+
+* results.csv: El cual contendrá la lista de los números obtenidos ordenados de maner ascendente. Se visualizará de la siguiente manera obteniendo la cantidad de registros que números se hayan solicitado
+
+    |Result|
+    |-|
+    |4|
+    |16|
+    |25|
+    |36|
+    |81|
