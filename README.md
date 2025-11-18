@@ -82,3 +82,13 @@ La ejecución de este desarrollo, nos generará dos archivos .CSV en la raiz de 
     |25|
     |36|
     |81|
+
+
+## Pruebas
+
+El proyecto cuenta con pruebas unitarias para sus funcionalidades principales. Para ejecutar estas pruebas se puede hacer utilizando el siguiente comando, y así visualizar incluso la cobertura obtenida.
+
+```bash
+go test ./... -cover
+```
+
