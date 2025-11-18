@@ -2,7 +2,7 @@
 
 Este proyecto es una implementación en Go del patron FAN-WORKER-SINK.
 
-Se desarolló utilizando Canales y Go Routines, aprovechando así la fortaleza y narutaleza de Go para tareas paralelas y concurrentes.
+Se desarolló utilizando Canales y Go Routines, aprovechando así la fortaleza y naturaleza de Go para tareas paralelas y concurrentes.
 
 Además para su construcciones se planeteó realizarlo con Clean Architecture, para buscar separar el dominio, de los casos de uso, y sus adaptadores, para que así sea más facil su mantenibilidad, además de poder escalar y extenderse más facilmente
 
@@ -50,7 +50,7 @@ go run main.go
 
 El desarrollo puede recibe 2 parametros que son opcionales:
 
-* numbers: Permite parametrizar la cantidad de números aleatorios que se van a generar y por ende la cantidad que números que se procesarán.
+* numbers: Permite parametrizar la cantidad de números aleatorios que se van a generar y por ende la cantidad de números que se procesarán.
 * workers: Permite parametrizar la cantidad de workers que podrán procesar los números que se generen
 
 Por ejemplo para 10.000 números con 5 workers sería
